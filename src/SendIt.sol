@@ -39,11 +39,11 @@ contract SendIt {
     ) public {
         if (isERC1155) {
             require(ERC1155(contractAddress).balanceOf(msg.sender, tokenIndex) > 0, "Sender is not the token owner, cannot proceed with transfer.");
-            require(ERC1155(contractAddress).isApprovedForAll(msg.sender, address(this)), "Contract not approved to send token on Sender behalf.");
+            require(ERC1155(contractAddress).isApprovedForAll(msg.sender, address(this)), "Contract not approved to send tokens on Sender behalf.");
             ERC1155(contractAddress).safeTransferFrom(msg.sender, recipient, tokenIndex, 1, bytes(""));
         } else {
             require(msg.sender == ERC721(contractAddress).ownerOf(tokenIndex), "Sender is not the token owner, cannot proceed with transfer.");
-            require(ERC721(contractAddress).getApproved(tokenIndex) == address(this), "Contract not approved to send token on Sender behalf.");
+            require(ERC721(contractAddress).isApprovedForAll(msg.sender, address(this)), "Contract not approved to send tokens on Sender behalf.");
             ERC721(contractAddress).safeTransferFrom(msg.sender, recipient, tokenIndex);
         }
         emit TokenTransfer(contractAddress, tokenIndex, msg.sender, recipient);
