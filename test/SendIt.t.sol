@@ -16,7 +16,7 @@ contract SendItTest is Test {
     }
 
     function testBulkTransferSucceeds() public {
-        uint256 amt = 10;
+        uint256 amt = 20;
         uint256[] memory tokenIndexes = new uint256[](amt);
         address[] memory recipients = new address[](amt);
         for (uint256 i; i < amt; i++) {
@@ -32,6 +32,15 @@ contract SendItTest is Test {
             recipients,
             false
         );
+        vm.stopPrank();
+    }
+
+    function testSingleTransfer() public {
+        nft.mint(address(5), 20);
+        vm.startPrank(address(5));
+        for (uint256 i; i < 20; i++) {
+            nft.safeTransferFrom(address(5), address(1), i + 1);
+        }
         vm.stopPrank();
     }
 
