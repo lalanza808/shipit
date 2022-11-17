@@ -17,16 +17,19 @@ contract SendItTest is Test {
 
     function testBulkTransferSucceeds() public {
         uint256 amt = 20;
+        uint256 fee = sendit.usageFee();
+        uint256 val = fee * amt;
         uint256[] memory tokenIndexes = new uint256[](amt);
         address[] memory recipients = new address[](amt);
         for (uint256 i; i < amt; i++) {
             tokenIndexes[i] = i + 1;
             recipients[i] = address(1);
         }
+        vm.deal(address(5), 1 ether);
         vm.startPrank(address(5));
         nft.mint(address(5), amt);
         nft.setApprovalForAll(address(sendit), true);
-        sendit.contractBulkTransfer(
+        sendit.contractBulkTransfer{value: val}(
             address(nft),
             tokenIndexes,
             recipients,
@@ -44,10 +47,13 @@ contract SendItTest is Test {
         vm.stopPrank();
     }
 
-    // function testUpdateVault() public {
-    //     sendit.updateVault(address(3));
-    //     console.log(address(sendit));
-    //     // console.log(sendit);
-    //     assertEq(sendit.addressVault(address(2)), address(0));
-    // }
+    function testUpdateVault() public {
+        sendit.updateVault(address(3));
+        assertEq(sendit.addressVault(address(2)), address(0));
+    }
+
+    // only token owner can bulk transfer
+    // can only proceed after approval set
+    // only owner can updateFee
+    // only owner can withdraw
 }
