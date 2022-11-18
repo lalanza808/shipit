@@ -46,10 +46,6 @@ contract SendIt is Ownable {
     User
     **************************/
 
-    function getFee() external view returns (uint256) {
-        return usageFee;
-    }
-
     function updateVault(address vaultAddress) external {
         addressVault[msg.sender] = vaultAddress;
     }
