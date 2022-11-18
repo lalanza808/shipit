@@ -10,22 +10,16 @@ contract ShipIt is Ownable {
     mapping(address => address) public addressVault; // users can store their personal vaults for ease of use
     uint256 public usageFee = .00015 ether;          // charge a small fee for the cost savings it provides
 
-    event TokenTransfer(address indexed contractAddress, uint256 tokenIndex, address indexed from, address indexed to);
-    
     /*************************
     Modifiers
     **************************/
 
-    modifier onlyIfTokenOwner(
-        address contractAddress,
-        uint256 tokenIndex,
-        bool isERC1155
+    modifier onlyIfPaid(
+        address[] calldata recipients,
+        uint256[] calldata tokenIndexes
     ) {
-        if (isERC1155) {
-            require(ERC1155(contractAddress).balanceOf(msg.sender, tokenIndex) > 0, "You must own the token.");
-        } else {
-            require(msg.sender == ERC721(contractAddress).ownerOf(tokenIndex), "You must own the token.");
-        }
+        require(tokenIndexes.length == recipients.length, "Array lengths must match.");
+        require(msg.value >= tokenIndexes.length * usageFee, "Invalid usage fee sent.");
         _;
     }
 
@@ -50,34 +44,31 @@ contract ShipIt is Ownable {
         addressVault[msg.sender] = vaultAddress;
     }
 
-    function contractTransfer(
+    // Expects flat list of recipients and token IDs
+    function erc721BulkTransfer(
         address contractAddress,
-        uint256 tokenIndex,
-        address recipient,
-        bool isERC1155
-    ) private {
-        if (isERC1155) {
-            require(ERC1155(contractAddress).balanceOf(msg.sender, tokenIndex) > 0, "Sender is not the token owner, cannot proceed with transfer.");
-            require(ERC1155(contractAddress).isApprovedForAll(msg.sender, address(this)), "Contract not approved to send tokens on Sender behalf.");
-            ERC1155(contractAddress).safeTransferFrom(msg.sender, recipient, tokenIndex, 1, bytes(""));
-        } else {
-            require(msg.sender == ERC721(contractAddress).ownerOf(tokenIndex), "Sender is not the token owner, cannot proceed with transfer.");
-            require(ERC721(contractAddress).isApprovedForAll(msg.sender, address(this)), "Contract not approved to send tokens on Sender behalf.");
-            ERC721(contractAddress).safeTransferFrom(msg.sender, recipient, tokenIndex);
+        address[] calldata recipients,
+        uint256[] calldata tokenIndexes
+    ) external payable onlyIfPaid(recipients, tokenIndexes) {
+        require(ERC721(contractAddress).isApprovedForAll(msg.sender, address(this)), "Contract not approved to send tokens on Sender behalf.");
+        for(uint256 i; i < tokenIndexes.length; i++) {
+            require(msg.sender == ERC721(contractAddress).ownerOf(tokenIndexes[i]), "Sender is not the token owner, cannot proceed with transfer.");
+            ERC721(contractAddress).safeTransferFrom(msg.sender, recipients[i], tokenIndexes[i]);
         }
-        emit TokenTransfer(contractAddress, tokenIndex, msg.sender, recipient);
     }
 
-    function contractBulkTransfer(
+    // Expects a tally of ERC-1155 token amounts batched beforehand for simple sending
+    function erc1155BulkTransfer(
         address contractAddress,
-        uint256[] calldata tokenIndexes,
         address[] calldata recipients,
-        bool isERC1155
-    ) external payable {
-        require(tokenIndexes.length == recipients.length, "Array lengths must match.");
-        require(msg.value >= tokenIndexes.length * usageFee, "Invalid usage fee sent.");
+        uint256[] calldata tokenIndexes,
+        uint256[] calldata amounts
+    ) external payable onlyIfPaid(recipients, tokenIndexes) {
+        require(amounts.length == recipients.length, "Array lengths must match.");
+        require(ERC1155(contractAddress).isApprovedForAll(msg.sender, address(this)), "Contract not approved to send tokens on Sender behalf.");
         for(uint256 i; i < tokenIndexes.length; i++) {
-            contractTransfer(contractAddress, tokenIndexes[i], recipients[i], isERC1155);
+            require(ERC1155(contractAddress).balanceOf(msg.sender, tokenIndexes[i]) >= amounts[i], "Not enough balance owned of the given token ID.");
+            ERC1155(contractAddress).safeTransferFrom(msg.sender, recipients[i], tokenIndexes[i], amounts[i], bytes(""));
         }
     }
 

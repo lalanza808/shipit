@@ -34,11 +34,10 @@ contract ShipItTest is Test {
         vm.startPrank(address(5));
         nft721.mint(amt);
         nft721.setApprovalForAll(address(shipit), true);
-        shipit.contractBulkTransfer{value: val}(
+        shipit.erc721BulkTransfer{value: val}(
             address(nft721),
-            tokenIndexes,
             recipients,
-            false
+            tokenIndexes
         );
         // assert balances
     }
@@ -58,11 +57,10 @@ contract ShipItTest is Test {
         nft721.setApprovalForAll(address(shipit), true);
         vm.stopPrank();
         vm.prank(address(3));
-        shipit.contractBulkTransfer{value: val}(
+        shipit.erc721BulkTransfer{value: val}(
             address(nft721),
-            tokenIndexes,
             recipients,
-            false
+            tokenIndexes
         );
     }
 
@@ -70,33 +68,40 @@ contract ShipItTest is Test {
         uint256 amt = 10;
         uint256 fee = shipit.usageFee();
         uint256 val = fee * amt;
-        uint256[] memory tokenIndexes = new uint256[](amt);
-        address[] memory recipients = new address[](amt);
-        for (uint256 i; i < amt; i++) {
-            tokenIndexes[i] = 1;
-            recipients[i] = address(1);
-        }
-        vm.deal(address(5), 1 ether);
-        vm.startPrank(address(5));
+        address[] memory recipients = new address[](2);
+        uint256[] memory tokenIndexes = new uint256[](2);
+        uint256[] memory amounts = new uint256[](2);
+        recipients[0] = address(11);
+        recipients[1] = address(11);
+        tokenIndexes[0] = 1;
+        tokenIndexes[1] = 5;
+        amounts[0] = amt;
+        amounts[1] = amt;
+        vm.deal(address(50), 1 ether);
+        vm.startPrank(address(50));
         nft1155.mint(1, amt);
+        nft1155.mint(5, amt);
         nft1155.setApprovalForAll(address(shipit), true);
-        shipit.contractBulkTransfer{value: val}(
+        shipit.erc1155BulkTransfer{value: val}(
             address(nft1155),
-            tokenIndexes,
             recipients,
-            true
+            tokenIndexes,
+            amounts
         );
-        assertEq(nft1155.balanceOf(address(1), 1), 10);
+        assertEq(nft1155.balanceOf(address(11), 1), 10);
+        assertEq(nft1155.balanceOf(address(11), 5), 10);
     }
 
     function testFail1155NonTokenOwnerCanSend() public {
         uint256 amt = 1;
         uint256 fee = shipit.usageFee();
         uint256 val = fee * amt;
-        uint256[] memory tokenIndexes = new uint256[](amt);
         address[] memory recipients = new address[](amt);
+        uint256[] memory tokenIndexes = new uint256[](amt);
+        uint256[] memory amounts = new uint256[](amt);
         tokenIndexes[0] = 1;
         recipients[0] = address(1);
+        amounts[0] = amt;
         vm.deal(address(5), 1 ether);
         vm.deal(address(3), 1 ether);
         vm.startPrank(address(5));
@@ -104,11 +109,11 @@ contract ShipItTest is Test {
         nft1155.setApprovalForAll(address(shipit), true);
         vm.stopPrank();
         vm.prank(address(3));
-        shipit.contractBulkTransfer{value: val}(
+        shipit.erc1155BulkTransfer{value: val}(
             address(nft1155),
-            tokenIndexes,
             recipients,
-            true
+            tokenIndexes,
+            amounts
         );
     }
 
