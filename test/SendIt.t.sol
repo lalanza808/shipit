@@ -3,19 +3,24 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import {SendIt} from "../src/SendIt.sol";
-import {NFT} from "../src/NFT.sol";
+import {NFT721} from "../src/sampleERC721.sol";
+import {NFT1155} from "../src/sampleERC1155.sol";
 
 contract SendItTest is Test {
     using stdStorage for StdStorage;
     SendIt public sendit;
-    NFT public nft;
+    NFT721 public nft721;
+    NFT1155 public nft1155;
 
     function setUp() public {
         sendit = new SendIt();
-        nft = new NFT();
+        nft721 = new NFT721();
+        nft1155 = new NFT1155();
     }
 
-    function testBulkTransferSucceeds() public {
+    // Tokens
+
+    function test721BulkTransferSuccess() public {
         uint256 amt = 20;
         uint256 fee = sendit.usageFee();
         uint256 val = fee * amt;
@@ -27,10 +32,10 @@ contract SendItTest is Test {
         }
         vm.deal(address(5), 1 ether);
         vm.startPrank(address(5));
-        nft.mint(address(5), amt);
-        nft.setApprovalForAll(address(sendit), true);
+        nft721.mint(amt);
+        nft721.setApprovalForAll(address(sendit), true);
         sendit.contractBulkTransfer{value: val}(
-            address(nft),
+            address(nft721),
             tokenIndexes,
             recipients,
             false
@@ -38,14 +43,32 @@ contract SendItTest is Test {
         vm.stopPrank();
     }
 
-    function testSingleTransfer() public {
-        nft.mint(address(5), 20);
+    function testFail721NonTokenOwnerCanSend() public {
+        uint256 amt = 1;
+        uint256 fee = sendit.usageFee();
+        uint256 val = fee * amt;
+        uint256[] memory tokenIndexes = new uint256[](amt);
+        address[] memory recipients = new address[](amt);
+        tokenIndexes[0] = 23;
+        recipients[0] = address(1);
+        vm.deal(address(5), 1 ether);
         vm.startPrank(address(5));
-        for (uint256 i; i < 20; i++) {
-            nft.safeTransferFrom(address(5), address(1), i + 1);
-        }
-        vm.stopPrank();
+        nft721.mint(amt);
+        // vm.stopPrank();
+        nft721.setApprovalForAll(address(sendit), true);
+        sendit.contractBulkTransfer{value: val}(
+            address(nft721),
+            tokenIndexes,
+            recipients,
+            false
+        );
     }
+
+    function test1155BulkTransferSuccess() public {
+        //
+    }
+
+    // meta
 
     function testUpdateVault() public {
         vm.prank(address(1));
@@ -53,29 +76,12 @@ contract SendItTest is Test {
         assertEq(sendit.addressVault(address(1)), address(3));
     }
 
-    function testTokenOwnerCanSend() public {
-        uint256 amt = 1;
-        uint256 fee = sendit.usageFee();
-        uint256 val = fee * amt;
-        uint256[] memory tokenIndexes = new uint256[](amt);
-        address[] memory recipients = new address[](amt);
-        for (uint256 i; i < amt; i++) {
-            tokenIndexes[i] = i + 1;
-            recipients[i] = address(1);
-        }
-        vm.deal(address(5), 1 ether);
-        vm.startPrank(address(5));
-        nft.mint(address(5), amt);
-        // vm.stopPrank();
-        nft.setApprovalForAll(address(sendit), true);
-        sendit.contractBulkTransfer{value: val}(
-            address(nft),
-            tokenIndexes,
-            recipients,
-            false
-        );
-    }
+    // admin
 
+    
+
+
+    // TODO
     // only token owner can bulk transfer
     // can only proceed after approval set
     // only owner can updateFee
