@@ -40,7 +40,7 @@ contract SendItTest is Test {
             recipients,
             false
         );
-        vm.stopPrank();
+        // assert balances
     }
 
     function testFail721NonTokenOwnerCanSend() public {
@@ -49,13 +49,15 @@ contract SendItTest is Test {
         uint256 val = fee * amt;
         uint256[] memory tokenIndexes = new uint256[](amt);
         address[] memory recipients = new address[](amt);
-        tokenIndexes[0] = 23;
+        tokenIndexes[0] = 1;
         recipients[0] = address(1);
         vm.deal(address(5), 1 ether);
+        vm.deal(address(3), 1 ether);
         vm.startPrank(address(5));
         nft721.mint(amt);
-        // vm.stopPrank();
         nft721.setApprovalForAll(address(sendit), true);
+        vm.stopPrank();
+        vm.prank(address(3));
         sendit.contractBulkTransfer{value: val}(
             address(nft721),
             tokenIndexes,
@@ -84,6 +86,7 @@ contract SendItTest is Test {
             recipients,
             true
         );
+        assertEq(nft1155.balanceOf(address(1), 1), 10);
     }
 
     function testFail1155NonTokenOwnerCanSend() public {
@@ -95,16 +98,17 @@ contract SendItTest is Test {
         tokenIndexes[0] = 1;
         recipients[0] = address(1);
         vm.deal(address(5), 1 ether);
+        vm.deal(address(3), 1 ether);
         vm.startPrank(address(5));
         nft1155.mint(1, amt);
         nft1155.setApprovalForAll(address(sendit), true);
         vm.stopPrank();
-        vm.prank(address(4));
+        vm.prank(address(3));
         sendit.contractBulkTransfer{value: val}(
             address(nft1155),
             tokenIndexes,
             recipients,
-            false
+            true
         );
     }
 
@@ -118,12 +122,29 @@ contract SendItTest is Test {
 
     // admin
 
-    
+    function testOwnerCanWithdraw() public {
+        address owner = sendit.owner();
+        vm.deal(address(sendit), 1 ether);
+        vm.deal(owner, 1 ether);
+        vm.deal(address(20), 2 ether);
+        vm.prank(owner);
+        sendit.transferOwnership(address(20));
+        vm.prank(address(20));
+        sendit.withdraw();
+        vm.startPrank(address(30));
+        vm.expectRevert();
+        sendit.withdraw();
+    }
 
+    function testOwnerCanUpdateFee() public {
+        address owner = sendit.owner();
+        vm.deal(owner, 1 ether);
+        vm.prank(owner);
+        sendit.updateFee(0.1 ether);
+        assertEq(sendit.usageFee(), 0.1 ether);
+        vm.startPrank(address(1));
+        vm.expectRevert();
+        sendit.updateFee(0.25 ether);
+    }
 
-    // TODO
-    // only token owner can bulk transfer
-    // can only proceed after approval set
-    // only owner can updateFee
-    // only owner can withdraw
 }
