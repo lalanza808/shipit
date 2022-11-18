@@ -48,8 +48,32 @@ contract SendItTest is Test {
     }
 
     function testUpdateVault() public {
+        vm.prank(address(1));
         sendit.updateVault(address(3));
-        assertEq(sendit.addressVault(address(2)), address(0));
+        assertEq(sendit.addressVault(address(1)), address(3));
+    }
+
+    function testTokenOwnerCanSend() public {
+        uint256 amt = 1;
+        uint256 fee = sendit.usageFee();
+        uint256 val = fee * amt;
+        uint256[] memory tokenIndexes = new uint256[](amt);
+        address[] memory recipients = new address[](amt);
+        for (uint256 i; i < amt; i++) {
+            tokenIndexes[i] = i + 1;
+            recipients[i] = address(1);
+        }
+        vm.deal(address(5), 1 ether);
+        vm.startPrank(address(5));
+        nft.mint(address(5), amt);
+        // vm.stopPrank();
+        nft.setApprovalForAll(address(sendit), true);
+        sendit.contractBulkTransfer{value: val}(
+            address(nft),
+            tokenIndexes,
+            recipients,
+            false
+        );
     }
 
     // only token owner can bulk transfer
