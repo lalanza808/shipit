@@ -14,7 +14,7 @@ echo -e "[+] Deploying ERC-1155"
 forge create --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY src/sampleERC1155.sol:NFT1155 | grep Deployed
 
 echo -e "[+] Deploying SendIt"
-forge create --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY src/SendIt.sol:SendIt | grep Deployed
+forge create --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY src/ShipIt.sol:ShipIt | grep Deployed
 
 echo -e "[+] Sending test Ether"
 cast send --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY $OP --value 0.5ether > /dev/null
