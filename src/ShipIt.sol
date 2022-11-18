@@ -5,7 +5,7 @@ import {ERC721} from "openzeppelin-contracts/token/ERC721/ERC721.sol";
 import {ERC1155} from "openzeppelin-contracts/token/ERC1155/ERC1155.sol";
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 
-contract SendIt is Ownable {
+contract ShipIt is Ownable {
 
     mapping(address => address) public addressVault; // users can store their personal vaults for ease of use
     uint256 public usageFee = .00015 ether;          // charge a small fee for the cost savings it provides

@@ -2,7 +2,7 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
-gas_reports = ["SendIt"]
+gas_reports = ["ShipIt"]
 
 [rpc_endpoints]
 goerli = "${GOERLI_RPC_URL}"
