@@ -8,7 +8,7 @@ import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 contract SendIt is Ownable {
 
     mapping(address => address) public addressVault; // users can store their personal vaults for ease of use
-    uint256 public usageFee = .0001 ether;           // charge a small fee for the cost savings it provides
+    uint256 public usageFee = .00015 ether;          // charge a small fee for the cost savings it provides
 
     event TokenTransfer(address indexed contractAddress, uint256 tokenIndex, address indexed from, address indexed to);
     
