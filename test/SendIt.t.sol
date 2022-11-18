@@ -65,7 +65,47 @@ contract SendItTest is Test {
     }
 
     function test1155BulkTransferSuccess() public {
-        //
+        uint256 amt = 10;
+        uint256 fee = sendit.usageFee();
+        uint256 val = fee * amt;
+        uint256[] memory tokenIndexes = new uint256[](amt);
+        address[] memory recipients = new address[](amt);
+        for (uint256 i; i < amt; i++) {
+            tokenIndexes[i] = 1;
+            recipients[i] = address(1);
+        }
+        vm.deal(address(5), 1 ether);
+        vm.startPrank(address(5));
+        nft1155.mint(1, amt);
+        nft1155.setApprovalForAll(address(sendit), true);
+        sendit.contractBulkTransfer{value: val}(
+            address(nft1155),
+            tokenIndexes,
+            recipients,
+            true
+        );
+    }
+
+    function testFail1155NonTokenOwnerCanSend() public {
+        uint256 amt = 1;
+        uint256 fee = sendit.usageFee();
+        uint256 val = fee * amt;
+        uint256[] memory tokenIndexes = new uint256[](amt);
+        address[] memory recipients = new address[](amt);
+        tokenIndexes[0] = 1;
+        recipients[0] = address(1);
+        vm.deal(address(5), 1 ether);
+        vm.startPrank(address(5));
+        nft1155.mint(1, amt);
+        nft1155.setApprovalForAll(address(sendit), true);
+        vm.stopPrank();
+        vm.prank(address(4));
+        sendit.contractBulkTransfer{value: val}(
+            address(nft1155),
+            tokenIndexes,
+            recipients,
+            false
+        );
     }
 
     // meta
