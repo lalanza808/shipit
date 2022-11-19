@@ -13,7 +13,7 @@ forge create --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY src/samp
 echo -e "[+] Deploying ERC-1155"
 forge create --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY src/sampleERC1155.sol:NFT1155 | grep Deployed
 
-echo -e "[+] Deploying SendIt"
+echo -e "[+] Deploying ShipIt"
 forge create --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY src/ShipIt.sol:ShipIt | grep Deployed
 
 echo -e "[+] Sending test Ether"
@@ -24,6 +24,12 @@ cast send --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY $ERC721 "mi
 
 echo -e "[+] Minting 800 ERC-1155 tokens to deployer (id 1)"
 cast send --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY $ERC1155 "mint(uint256,uint256)" 1 800 > /dev/null
+
+echo -e "[+] Minting 800 ERC-1155 tokens to deployer (id 2)"
+cast send --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY $ERC1155 "mint(uint256,uint256)" 2 800 > /dev/null
+
+echo -e "[+] Minting 800 ERC-1155 tokens to deployer (id 3)"
+cast send --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY $ERC1155 "mint(uint256,uint256)" 3 800 > /dev/null
 
 echo -e "[+] Setting approval for contracts"
 cast send --rpc-url http://localhost:8545 --private-key $PRIVATE_KEY $ERC721 "setApprovalForAll(address,bool)"  $SHIPIT true > /dev/null
