@@ -1,3 +1,1 @@
-# ShipIt
-
-ERC-721 and ERC-1155 token bulk sender contract. 
+moved to https://git.cloud.lzahq.tech/ethshit/shipit
